@@ -3,7 +3,7 @@ import { createBot, createProvider, createFlow, addKeyword, utils } from '@build
 import { MemoryDB as Database } from '@builderbot/bot'
 import { BaileysProvider as Provider } from '@builderbot/provider-baileys'
 
-const PORT = process.env.PORT ?? 3008
+const PORT = process.env.PORT ?? 3002
 
 const discordFlow = addKeyword<Provider, Database>('doc').addAnswer(
     ['You can see the documentation here', '📄 https://builderbot.app/docs \n', 'Do you want to continue? *yes*'].join(
