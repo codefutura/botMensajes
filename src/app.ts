@@ -2,16 +2,9 @@ import { join } from 'path'
 import { createBot, createProvider, createFlow, addKeyword, utils } from '@builderbot/bot'
 import { MemoryDB as Database } from '@builderbot/bot'
 import { BaileysProvider as Provider } from '@builderbot/provider-baileys'
-import { createClient } from '@supabase/supabase-js'
+
 const PORT = process.env.PORT ?? 3002
 
-
-
-// Configurar Supabase con variables de entorno
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://facloud.codefutura.com'
-const SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzE2OTU1MjAwLAogICJleHAiOiAxODc0NzIxNjAwCn0.WYf6sBNcPcMJjdt7MJdFkIBgpNAqX1DQJNylhc9xI8U'
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
 const discordFlow = addKeyword<Provider, Database>('doc').addAnswer(
     ['You can see the documentation here', '📄 https://builderbot.app/docs \n', 'Do you want to continue? *yes*'].join(
@@ -147,76 +140,15 @@ const main = async () => {
         })
     )
 */
+
 adapterProvider.server.post(
     '/v1/messages',
     handleCtx(async (bot, req, res) => {
-        const { id_empresa } = req.body
-
-        if (!id_empresa) {
-            return res.status(400).json({ error: 'Falta el campo obligatorio id_empresa' })
-        }
-
-        const { data, error } = await supabase
-            .from('tbl_cxcobrar')
-            .select(`
-                id,
-                id_cliente,
-                importe,
-                pagos,
-                tbl_clientes(nombre, tel2),
-                tbl_empresa(nombre)
-            `)
-            .eq('finalizado', false)
-            .eq('id_empresa', id_empresa)
-
-        if (error || !data) {
-            console.error('Error al consultar Supabase:', error)
-            return res.status(500).json({ error: 'Error consultando cuentas por cobrar' })
-        }
-
-        // Agrupar por cliente
-        const clientesMap = new Map()
-
-        for (const cuenta of data) {
-            const idCliente = cuenta.id_cliente
-
-            // Suponiendo que tbl_clientes es un array
-            const clienteObj = Array.isArray(cuenta.tbl_clientes) ? cuenta.tbl_clientes[0] : cuenta.tbl_clientes
-            const nombre = clienteObj?.nombre ?? 'Cliente'
-            const telefono = clienteObj?.tel2
-            const empresa = 'FaCloud'
-            const importe = parseFloat(cuenta.importe)
-            const pagos = parseFloat(cuenta.pagos ?? '0')
-            const balance = importe - pagos
-
-            if (!telefono) continue
-
-            if (!clientesMap.has(idCliente)) {
-                clientesMap.set(idCliente, {
-                    nombre,
-                    telefono,
-                    empresa,
-                    totalPendiente: 0
-                })
-            }
-
-            const clienteInfo = clientesMap.get(idCliente)
-            clienteInfo.totalPendiente += balance
-        }
-
-        let msg = ''
-        // Enviar mensaje por cliente
-        for (const [_, cliente] of clientesMap.entries()) {
-            const pendiente = cliente.totalPendiente.toFixed(2)
-            const mensaje = `📢 Sistema automático ${cliente.empresa} - \n${cliente.nombre.toUpperCase()}, usted tiene un balance pendiente de RD$${pendiente}. Le agradecemos realizar el pago para evitar recargos.`
-            msg = mensaje
-          await bot.sendMessage(cliente.telefono, mensaje, { media: null })
-        }
-
-        return res.end(msg)
+        const { number, message, urlMedia } = req.body
+        await bot.sendMessage(number, message, { media: urlMedia ?? null })
+        return res.end('sended')
     })
 )
-
 
 
     adapterProvider.server.post(
