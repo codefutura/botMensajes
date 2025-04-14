@@ -5,69 +5,14 @@ import { BaileysProvider as Provider } from '@builderbot/provider-baileys'
 
 const PORT = process.env.PORT ?? 3002
 
-const discordFlow = addKeyword<Provider, Database>('doc').addAnswer(
-    ['You can see the documentation here', '📄 https://builderbot.app/docs \n', 'Do you want to continue? *yes*'].join(
-        '\n'
-    ),
-    { capture: true },
-    async (ctx, { gotoFlow, flowDynamic }) => {
-        if (ctx.body.toLocaleLowerCase().includes('yes')) {
-            return gotoFlow(registerFlow)
-        }
-        await flowDynamic('Thanks!')
-        return
-    }
-)
+import { createClient } from '@supabase/supabase-js'
 
-/*const welcomeFlow = addKeyword<Provider, Database>(['hi', 'hello', 'hola'])
-    .addAnswer(`🙌 Hello welcome to this *Chatbot*`)
-    .addAnswer(
-        [
-            'I share with you the following links of interest about the project',
-            '👉 *doc* to view the documentation',
-        ].join('\n'),
-        { delay: 800, capture: true },
-        async (ctx, { fallBack }) => {
-            if (!ctx.body.toLocaleLowerCase().includes('doc')) {
-                return fallBack('You should type *doc*')
-            }
-            return
-        },
-        [discordFlow]
-    )
-*/
-/*
-const welcomeFlow = addKeyword<Provider, Database>([
-    'hola','hello',
-    'buenas',
-    'saldo',
-    'balance',
-    'dinero',
-    'disponible',
-    'cuenta',
-    'consulta',
-    'cuánto tengo',
-    'cuánto dinero tengo',
-    'mi saldo',
-    'ver balance'
-  ])
-    .addAnswer('🙌 ¡Hola! Bienvenido al Sistema de Consulta de Balance Facloud! 💰')
-    .addAnswer(
-      [
-        'Estoy aquí para ayudarte a conocer tu *saldo disponible* o *balance actual* de tu cuenta.',
-        '👉 Escribe la palabra *consultar* para verificar tu balance.',
-      ].join('\n'),
-      { delay: 800, capture: true },
-      async (ctx, { fallBack }) => {
-        const mensaje = ctx.body.toLowerCase()
-        if (!mensaje.includes('consultar')) {
-          return fallBack('Por favor, escribe la palabra *consultar* para continuar.')
-        }
-        return
-      },
-      [discordFlow] // Aquí podrías reemplazar esto con el flujo que muestra el balance real del cliente
-    )
-*/
+// Configurar Supabase con variables de entorno
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://facloud.codefutura.com'
+const SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzE2OTU1MjAwLAogICJleHAiOiAxODc0NzIxNjAwCn0.WYf6sBNcPcMJjdt7MJdFkIBgpNAqX1DQJNylhc9xI8U'
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+
 const welcomeFlow = addKeyword<Provider, Database>([
     'hola', 'hello', 'buenas', 'saldo', 'balance', 'dinero', 'disponible', 'cuenta', 'consulta', 'cuánto tengo', 'cuánto dinero tengo', 'mi saldo', 'ver balance'
   ])
@@ -179,7 +124,7 @@ const main = async () => {
             "message":"Hola Sr. Buroni usted tiene un balance de 5,871.00, favor pagar cuanto antes o envite recorgos"
         }
     */
-    adapterProvider.server.post(
+  /*  adapterProvider.server.post(
         '/v1/messages',
         handleCtx(async (bot, req, res) => {
             const { number, message, urlMedia } = req.body
@@ -187,6 +132,75 @@ const main = async () => {
             return res.end('sended')
         })
     )
+*/
+adapterProvider.server.post(
+    '/v1/messages',
+    handleCtx(async (bot, req, res) => {
+        const { id_empresa } = req.body
+
+        if (!id_empresa) {
+            return res.status(400).json({ error: 'Falta el campo obligatorio id_empresa' })
+        }
+
+        const { data, error } = await supabase
+            .from('tbl_cxcobrar')
+            .select(`
+                id,
+                id_cliente,
+                importe,
+                pagos,
+                tbl_clientes(nombre, tel2),
+                tbl_empresa(nombre)
+            `)
+            .eq('finalizado', false)
+            .eq('id_empresa', id_empresa)
+
+        if (error || !data) {
+            console.error('Error al consultar Supabase:', error)
+            return res.status(500).json({ error: 'Error consultando cuentas por cobrar' })
+        }
+
+        // Agrupar por cliente
+        const clientesMap = new Map()
+
+        for (const cuenta of data) {
+            const idCliente = cuenta.id_cliente
+            const nombre = cuenta.tbl_clientes?.nombre ?? 'Cliente'
+            const telefono = cuenta.tbl_clientes?.tel2
+            const empresa = cuenta.tbl_empresa?.nombre ?? 'FaCloud'
+            const importe = parseFloat(cuenta.importe)
+            const pagos = parseFloat(cuenta.pagos ?? '0')
+            const balance = importe - pagos
+
+            if (!telefono) continue
+
+            if (!clientesMap.has(idCliente)) {
+                clientesMap.set(idCliente, {
+                    nombre,
+                    telefono,
+                    empresa,
+                    totalPendiente: 0
+                })
+            }
+
+            const clienteInfo = clientesMap.get(idCliente)
+            clienteInfo.totalPendiente += balance
+        }
+
+
+        var msg='';
+        // Enviar mensaje por cliente
+        for (const [_, cliente] of clientesMap.entries()) {
+            const pendiente = cliente.totalPendiente.toFixed(2)
+            const mensaje = `📢 Sistema automático ${cliente.empresa} - \n${cliente.nombre.toUpperCase()}, usted tiene un balance pendiente de RD$${pendiente}. Le agradecemos realizar el pago para evitar recargos.`
+            msg=mensaje;
+           // await bot.sendMessage(cliente.telefono, mensaje, { media: null })
+        }
+
+        return res.end(msg)
+    })
+)
+
 
 
     adapterProvider.server.post(
