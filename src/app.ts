@@ -5,7 +5,7 @@ import { BaileysProvider as Provider } from '@builderbot/provider-baileys'
 
 const PORT = process.env.PORT ?? 3002
 
-import { createClient } from '@supabase/supabase-js'
+const { createClient } = require('@supabase/supabase-js')
 
 // Configurar Supabase con variables de entorno
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://facloud.codefutura.com'
