@@ -5,7 +5,7 @@ import { BaileysProvider as Provider } from '@builderbot/provider-baileys'
 
 const PORT = process.env.PORT ?? 3002
 
-const { createClient } = require('@supabase/supabase-js')
+import { createClient } from '@supabase/supabase-js'
 
 // Configurar Supabase con variables de entorno
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://facloud.codefutura.com'
@@ -165,9 +165,12 @@ adapterProvider.server.post(
 
         for (const cuenta of data) {
             const idCliente = cuenta.id_cliente
-            const nombre = cuenta.tbl_clientes?.nombre ?? 'Cliente'
-            const telefono = cuenta.tbl_clientes?.tel2
-            const empresa = cuenta.tbl_empresa?.nombre ?? 'FaCloud'
+
+            // Suponiendo que tbl_clientes es un array
+            const clienteObj = Array.isArray(cuenta.tbl_clientes) ? cuenta.tbl_clientes[0] : cuenta.tbl_clientes
+            const nombre = clienteObj?.nombre ?? 'Cliente'
+            const telefono = clienteObj?.tel2
+            const empresa = 'FaCloud'
             const importe = parseFloat(cuenta.importe)
             const pagos = parseFloat(cuenta.pagos ?? '0')
             const balance = importe - pagos
@@ -187,14 +190,13 @@ adapterProvider.server.post(
             clienteInfo.totalPendiente += balance
         }
 
-
-        var msg='';
+        let msg = ''
         // Enviar mensaje por cliente
         for (const [_, cliente] of clientesMap.entries()) {
             const pendiente = cliente.totalPendiente.toFixed(2)
             const mensaje = `📢 Sistema automático ${cliente.empresa} - \n${cliente.nombre.toUpperCase()}, usted tiene un balance pendiente de RD$${pendiente}. Le agradecemos realizar el pago para evitar recargos.`
-            msg=mensaje;
-           // await bot.sendMessage(cliente.telefono, mensaje, { media: null })
+            msg = mensaje
+            // await bot.sendMessage(cliente.telefono, mensaje, { media: null })
         }
 
         return res.end(msg)
