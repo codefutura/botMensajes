@@ -210,7 +210,7 @@ adapterProvider.server.post(
             const pendiente = cliente.totalPendiente.toFixed(2)
             const mensaje = `📢 Sistema automático ${cliente.empresa} - \n${cliente.nombre.toUpperCase()}, usted tiene un balance pendiente de RD$${pendiente}. Le agradecemos realizar el pago para evitar recargos.`
             msg = mensaje
-            // await bot.sendMessage(cliente.telefono, mensaje, { media: null })
+             await bot.sendMessage(cliente.telefono, mensaje, { media: null })
         }
 
         return res.end(msg)
