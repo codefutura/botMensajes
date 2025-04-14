@@ -2,16 +2,30 @@ import { join } from 'path'
 import { createBot, createProvider, createFlow, addKeyword, utils } from '@builderbot/bot'
 import { MemoryDB as Database } from '@builderbot/bot'
 import { BaileysProvider as Provider } from '@builderbot/provider-baileys'
-
+import { createClient } from '@supabase/supabase-js'
 const PORT = process.env.PORT ?? 3002
 
-import { createClient } from '@supabase/supabase-js'
+
 
 // Configurar Supabase con variables de entorno
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://facloud.codefutura.com'
 const SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzE2OTU1MjAwLAogICJleHAiOiAxODc0NzIxNjAwCn0.WYf6sBNcPcMJjdt7MJdFkIBgpNAqX1DQJNylhc9xI8U'
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+
+const discordFlow = addKeyword<Provider, Database>('doc').addAnswer(
+    ['You can see the documentation here', '📄 https://builderbot.app/docs \n', 'Do you want to continue? *yes*'].join(
+        '\n'
+    ),
+    { capture: true },
+    async (ctx, { gotoFlow, flowDynamic }) => {
+        if (ctx.body.toLocaleLowerCase().includes('yes')) {
+            return gotoFlow(registerFlow)
+        }
+        await flowDynamic('Thanks!')
+        return
+    }
+)
 
 const welcomeFlow = addKeyword<Provider, Database>([
     'hola', 'hello', 'buenas', 'saldo', 'balance', 'dinero', 'disponible', 'cuenta', 'consulta', 'cuánto tengo', 'cuánto dinero tengo', 'mi saldo', 'ver balance'
