@@ -1,34 +1,33 @@
 {
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "ES2022",
-    "declaration": false,
-    "declarationMap": false,
-    "moduleResolution": "node",
-    "removeComments": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true,
-    "sourceMap": false,
-    "outDir": "./dist",
-    "baseUrl": "./",
-    "rootDir": "./",
-    "incremental": true,
-    "skipLibCheck": true,
-    "paths": {
-      "~/*": ["./src/*"]
-    }
+  "name": "base-bailey-json",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/app.js",
+  "type": "module",
+  "scripts": {
+    "start": "node ./dist/app.js",
+    "lint": "eslint . --no-ignore",
+    "dev": "npm run lint && nodemon ./src/app.ts",
+    "build": "npx rollup -c"
   },
-  "include": [
-    "**/*.js",
-    "**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "**/*.test.ts",
-    "**/*.spec.ts",
-    "**e2e**",
-    "**mock**"
-  ]
+  "keywords": [],
+  "dependencies": {
+    "@builderbot/bot": "1.2.5",
+    "@builderbot/provider-baileys": "1.2.5",
+    "@supabase/supabase-js": "^2.49.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "@typescript-eslint/eslint-plugin": "^7.2.0",
+    "@typescript-eslint/parser": "^7.4.0",
+    "eslint": "^8.52.0",
+    "eslint-plugin-builderbot": "latest",
+    "nodemon": "^3.1.0",
+    "rollup": "^4.10.0",
+    "rollup-plugin-typescript2": "^0.36.0",
+    "tsx": "^4.7.1",
+    "typescript": "^5.4.3"
+  },
+  "author": "",
+  "license": "ISC"
 }
