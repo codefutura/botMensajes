@@ -88,15 +88,9 @@ const detallesCuentasFlow = addKeyword(['detalles', 'cuenta', 'ver detalles'])
       { delay: 1000 }
     )
 
-const registerFlow = addKeyword<Provider, Database>(utils.setEvent('REGISTER_FLOW'))
-    .addAnswer(`What is your name?`, { capture: true }, async (ctx, { state }) => {
-        await state.update({ name: ctx.body })
-    })
-    .addAnswer('What is your age?', { capture: true }, async (ctx, { state }) => {
-        await state.update({ age: ctx.body })
-    })
-    .addAction(async (_, { flowDynamic, state }) => {
-        await flowDynamic(`${state.get('name')}, thanks for your information!: Your age: ${state.get('age')}`)
+const registerFlow = addKeyword<Provider, Database>('REGISTER_PLACEHOLDER')
+    .addAction(async () => {
+        // Este flujo no hace nada
     })
 
 const fullSamplesFlow = addKeyword<Provider, Database>(['samples', utils.setEvent('SAMPLES')])
@@ -115,7 +109,7 @@ const main = async () => {
     //Aqui para responder cuando escriben
    // const adapterFlow = createFlow([welcomeFlow, registerFlow, fullSamplesFlow])
     
-    const adapterFlow = createFlow([])
+    const adapterFlow = createFlow([registerFlow])
     const adapterProvider = createProvider(Provider)
     const adapterDB = new Database()
 
