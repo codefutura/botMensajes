@@ -112,8 +112,10 @@ const fullSamplesFlow = addKeyword<Provider, Database>(['samples', utils.setEven
 
 
 const main = async () => {
-    const adapterFlow = createFlow([welcomeFlow, registerFlow, fullSamplesFlow])
+    //Aqui para responder cuando escriben
+   // const adapterFlow = createFlow([welcomeFlow, registerFlow, fullSamplesFlow])
     
+    const adapterFlow = createFlow()
     const adapterProvider = createProvider(Provider)
     const adapterDB = new Database()
 
