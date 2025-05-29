@@ -115,7 +115,7 @@ const main = async () => {
     //Aqui para responder cuando escriben
    // const adapterFlow = createFlow([welcomeFlow, registerFlow, fullSamplesFlow])
     
-    const adapterFlow = createFlow()
+    const adapterFlow = createFlow([])
     const adapterProvider = createProvider(Provider)
     const adapterDB = new Database()
 
